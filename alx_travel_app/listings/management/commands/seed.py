@@ -181,16 +181,16 @@ class Command(BaseCommand):
 
         listings = []
         for i, listing_data in enumerate(listings_data):
-            availability_from = datetime.now().date()
-            availability_to = availability_from + timedelta(days=365)
+            available_from = datetime.now().date()
+            available_to = available_from + timedelta(days=365)
 
             listing, created = Listing.objects.get_or_create(
                 title=listing_data['title'],
                 defaults={
                     **listing_data,
                     'owner': owners[i % len(owners)],
-                    'availability_from': availability_from,
-                    'availability_to': availability_to,
+                    'available_from': available_from,
+                    'available_to': available_to,
                 }
             )
             if created:
@@ -263,8 +263,8 @@ class Command(BaseCommand):
         completed_bookings = [b for b in bookings if b.status == 'completed']
 
         for booking in completed_bookings:
-            # Check if review already exists
-            if hasattr(booking, 'review'):
+            # Skip if a review for this booking already exists
+            if booking.reviews.exists():
                 continue
 
             review_texts = [
@@ -298,7 +298,7 @@ class Command(BaseCommand):
                 title=review_data['title'],
                 comment=review_data['comment'],
                 rating=review_data['rating'],
-                is_verified_booking=True,
+                is_verified=True,
             )
             reviews_created += 1
             self.stdout.write(f'Created review: {review.title}')
